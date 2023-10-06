@@ -25,9 +25,9 @@ pnet = "0.34.0"
 ipnetwork = "0.20.0"
 ratatui = "0.23.0"
 crossterm = "0.27.0"
-clap = { version = "4.4.4", features = ["derive"] }
+clap = { version = "4.4.6", features = ["derive"] }
 chrono = "0.4"
-regex = "1.9.5"
+regex = "1.9.6"
 tokio = { version = "1.32", features = ["rt", "sync"] }
 trust-dns-resolver = "0.23.0"
 async-trait = "0.1.73"
@@ -35,7 +35,7 @@ unicode-width = "0.1.11"
 resolv-conf = "0.7.0"
 pnet_macros_support = "0.34.0"
 anyhow = { version = "1.0.75", features = ["backtrace"] }
-thiserror = "1.0.48"
+thiserror = "1.0.49"
 
 [target.'cfg(target_os="windows")'.dependencies]
 netstat2 = "0.9.1"
@@ -45,7 +45,7 @@ sysinfo = "0.29.10"
 procfs = "0.15.1"
 
 [dev-dependencies]
-insta = "1.32.0"
+insta = "1.33.0"
 pnet_base = "0.34.0"
 packet-builder = { version = "0.7.0", git = "https://github.com/cyqsimon/packet_builder.git", branch = "patch-update" }
 
