@@ -4,9 +4,27 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 jobs:
+  get-msrv:
+    name: Get declared MSRV from Cargo.toml
+    runs-on: ubuntu-latest
+    outputs:
+      msrv: ${{ steps.get_msrv.outputs.msrv }}
+    steps:
+      - name: Install ripgrep
+        run: sudo apt-get install -y ripgrep
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get MSRV
+        id: get_msrv
+        run: rg '^\s*rust-version\s*=\s*"(\d+(\.\d+){0,2})"' --replace 'msrv=$1' Cargo.toml >> "$GITHUB_OUTPUT"
+
   test:
     name: test
+    needs: get-msrv
     env:
       # Emit backtraces on panics.
       RUST_BACKTRACE: 1
@@ -16,12 +34,12 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         rust:
-          - 1.70.0 # MSRV
+          - ${{ needs.get-msrv.outputs.msrv }}
           - stable
           - nightly
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@master
@@ -33,6 +51,7 @@ jobs:
         run: cargo fmt --all -- --check
 
       - name: Build
+        id: build
         run: cargo build --verbose
 
       # This is useful for debugging problems when the expected build artifacts
@@ -51,6 +70,11 @@ jobs:
       - name: Run clippy
         run: cargo clippy --all-targets --all-features -- -D warnings
 
+      - name: Install cargo-insta
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-insta
+
       - name: Install npcap on Windows
         # PRs cannot not be trusted with repository secrets
         if: (matrix.os == 'windows-latest') && (github.event_name != 'pull_request')
@@ -62,21 +86,32 @@ jobs:
           # see https://stackoverflow.com/a/1674950/5637701
           & "$env:TEMP/npcap-oem.exe" /S
 
-      - name: Run tests
+      - name: Run tests using cargo-insta
+        id: run_tests
         # npcap is needed to run tests on Windows, so this is an unfortunate
         # sacrifice we have to make in the name of security
         if: (matrix.os != 'windows-latest') || (github.event_name != 'pull_request')
-        run: cargo test --verbose
+        env:
+          # make insta generate new snapshots in CI
+          INSTA_UPDATE: new
+        run: cargo insta test --color=never
+
+      - name: Upload snapshots of failed tests
+        if: ${{ failure() && steps.run_tests.outcome == 'failure' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.os }}-${{ matrix.rust }}-failed_snapshots
+          path: src/tests/cases/snapshots/*.snap.new
 
       - name: Upload unix binary
-        if: matrix.os != 'windows-latest'
+        if: ${{ matrix.os != 'windows-latest' && ( success() || steps.build.outcome == 'success' ) }}
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.os }}-${{ matrix.rust }}
           path: target/debug/bandwhich
 
       - name: Upload windows binary
-        if: matrix.os == 'windows-latest'
+        if: ${{ matrix.os == 'windows-latest' && ( success() || steps.build.outcome == 'success' ) }}
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.os }}-${{ matrix.rust }}

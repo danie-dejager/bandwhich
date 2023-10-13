@@ -56,10 +56,10 @@ impl NetworkFrames {
             current_index: 0,
         })
     }
-    fn next_packet(&mut self) -> &Option<Vec<u8>> {
+    fn next_packet(&mut self) -> Option<&[u8]> {
         let next_index = self.current_index;
         self.current_index += 1;
-        &self.packets[next_index]
+        self.packets.get(next_index).and_then(|p| p.as_deref())
     }
 }
 impl DataLinkReceiver for NetworkFrames {
@@ -72,15 +72,15 @@ impl DataLinkReceiver for NetworkFrames {
         if self.current_index < self.packets.len() {
             let action = self.next_packet();
             match action {
-                Some(packet) => Ok(&packet[..]),
+                Some(packet) => Ok(packet),
                 None => {
                     thread::sleep(time::Duration::from_secs(1));
-                    Ok(&[][..])
+                    Ok(&[])
                 }
             }
         } else {
             thread::sleep(time::Duration::from_secs(1));
-            Ok(&[][..])
+            Ok(&[])
         }
     }
 }
