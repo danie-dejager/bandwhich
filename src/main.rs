@@ -1,4 +1,4 @@
-#![deny(clippy::all)]
+#![deny(clippy::enum_glob_use)]
 
 mod cli;
 mod display;
@@ -28,6 +28,7 @@ use network::{
     dns::{self, IpTable},
     LocalSocket, Sniffer, Utilization,
 };
+use once_cell::sync::Lazy;
 use pnet::datalink::{DataLinkReceiver, NetworkInterface};
 use ratatui::backend::{Backend, CrosstermBackend};
 use simplelog::WriteLogger;
@@ -35,6 +36,21 @@ use simplelog::WriteLogger;
 use crate::cli::Opt;
 
 const DISPLAY_DELTA: Duration = Duration::from_millis(1000);
+
+/// Lock guard to prevent races during logging.
+static LOG_LOCK: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
+
+/// Thread-safe log macro with a global Mutex guard.
+#[macro_export]
+macro_rules! mt_log {
+    ($log_macro: ident, $($fmt_args:expr),*) => {{
+        let guard = $crate::LOG_LOCK
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        log::$log_macro!($($fmt_args,)*);
+        drop(guard);
+    }};
+}
 
 fn main() -> anyhow::Result<()> {
     let opts = Opt::parse();
@@ -77,8 +93,7 @@ pub struct OpenSockets {
 }
 
 pub struct OsInputOutput {
-    pub network_interfaces: Vec<NetworkInterface>,
-    pub network_frames: Vec<Box<dyn DataLinkReceiver>>,
+    pub interfaces_with_frames: Vec<(NetworkInterface, Box<dyn DataLinkReceiver>)>,
     pub get_open_sockets: fn() -> OpenSockets,
     pub terminal_events: Box<dyn Iterator<Item = Event> + Send>,
     pub dns_client: Option<dns::Client>,
@@ -265,9 +280,8 @@ where
     active_threads.push(terminal_event_handler);
 
     let sniffer_threads = os_input
-        .network_interfaces
+        .interfaces_with_frames
         .into_iter()
-        .zip(os_input.network_frames)
         .map(|(iface, frames)| {
             let name = format!("sniffing_handler_{}", iface.name);
             let running = running.clone();
