@@ -6,6 +6,48 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+## Added
+* CI: include generated assets in release archive #359 - @cyqsimon
+
+## Changed
+* CI: strip release binaries for all targets #358 - @cyqsimon
+
+## [0.22.2] - 2024-01-28
+
+## Added
+
+* Generate completion & manpage #357 - @cyqsimon
+
+## [0.22.1] - 2024-01-28
+
+## Fixed
+
+* Hot fix a Windows compile issue #356 - @cyqsimon
+
+## [0.22.0] - 2024-01-28
+
+### Added
+
+* Log unresolved processes in more detail + general refactor #318 - @cyqsimon
+* Display bandwidth in different unit families #328 - @cyqsimon
+* CI: ensure a changelog entry exists for each PR #331 - @cyqsimon
+* Show interface names #340 - @ilyes-ced
+
+### Changed
+
+* Table formatting logic overhaul #305 - @cyqsimon
+* Refactor OsInputOutput (combine interfaces & frames into single Vec) #310 - @cyqsimon
+
+## Removed
+
+* Reorganise & cleanup packaging code/resources #329 - @cyqsimon
+
+### Fixed
+
+* Make logging race-free using a global lock & macro #309 - @cyqsimon
+* Use once_cell::sync::Lazy to make regex usage more ergonomic #313 - @cyqsimon
+* Fix vague CLI option documentation; closes #314 #316 - @cyqsimon
+
 ## [0.21.1] - 2023-10-16
 
 ### Fixed

@@ -3,7 +3,6 @@ use std::{collections::HashMap, fmt, iter::FromIterator, net::IpAddr, ops::Index
 use derivative::Derivative;
 use itertools::Itertools;
 use ratatui::{
-    backend::Backend,
     layout::{Constraint, Rect},
     style::{Color, Style},
     terminal::Frame,
@@ -12,7 +11,7 @@ use ratatui::{
 use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
 
 use crate::{
-    display::{Bandwidth, DisplayBandwidth, UIState},
+    display::{Bandwidth, BandwidthUnitFamily, DisplayBandwidth, UIState},
     network::{display_connection_string, display_ip_or_host},
 };
 
@@ -204,7 +203,11 @@ impl Table {
                         &connection_data.interface_name,
                     ),
                     connection_data.process_name.to_string(),
-                    display_upload_and_download(connection_data, state.cumulative_mode),
+                    display_upload_and_download(
+                        connection_data,
+                        state.unit_family,
+                        state.cumulative_mode,
+                    ),
                 ]
             })
             .collect();
@@ -252,7 +255,11 @@ impl Table {
                 [
                     (*process_name).to_string(),
                     data_for_process.connection_count.to_string(),
-                    display_upload_and_download(data_for_process, state.cumulative_mode),
+                    display_upload_and_download(
+                        data_for_process,
+                        state.unit_family,
+                        state.cumulative_mode,
+                    ),
                 ]
             })
             .collect();
@@ -304,7 +311,11 @@ impl Table {
                 [
                     remote_address,
                     data_for_remote_address.connection_count.to_string(),
-                    display_upload_and_download(data_for_remote_address, state.cumulative_mode),
+                    display_upload_and_download(
+                        data_for_remote_address,
+                        state.unit_family,
+                        state.cumulative_mode,
+                    ),
                 ]
             })
             .collect();
@@ -326,7 +337,7 @@ impl Table {
     }
 
     /// See [`Table`] for layout rules.
-    pub fn render(&self, frame: &mut Frame<impl Backend>, rect: Rect) {
+    pub fn render(&self, frame: &mut Frame, rect: Rect) {
         let (computed_layout, spacer_width) = {
             // pick the largest possible layout, constrained by the available width
             let &(_, layout) = self
@@ -366,21 +377,26 @@ impl Table {
             .map(Constraint::Length)
             .collect();
 
-        let table = ratatui::widgets::Table::new(tui_rows_iter)
+        let table = ratatui::widgets::Table::new(tui_rows_iter, widths_constraints)
             .block(Block::default().title(self.title).borders(Borders::ALL))
             .header(Row::new(column_names).style(Style::default().fg(Color::Yellow)))
-            .widths(&widths_constraints)
             .column_spacing(spacer_width);
         frame.render_widget(table, rect);
     }
 }
 
-fn display_upload_and_download(bandwidth: &impl Bandwidth, _cumulative: bool) -> String {
+fn display_upload_and_download(
+    bandwidth: &impl Bandwidth,
+    unit_family: BandwidthUnitFamily,
+    _cumulative: bool,
+) -> String {
     let up = DisplayBandwidth {
         bandwidth: bandwidth.get_total_bytes_uploaded() as f64,
+        unit_family,
     };
     let down = DisplayBandwidth {
         bandwidth: bandwidth.get_total_bytes_downloaded() as f64,
+        unit_family,
     };
     format!("{up} / {down}")
 }

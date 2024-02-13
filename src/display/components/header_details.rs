@@ -1,7 +1,6 @@
 use std::time::{Duration, Instant};
 
 use ratatui::{
-    backend::Backend,
     layout::{Alignment, Rect},
     style::{Color, Modifier, Style},
     terminal::Frame,
@@ -42,7 +41,7 @@ pub struct HeaderDetails<'a> {
 }
 
 impl<'a> HeaderDetails<'a> {
-    pub fn render(&self, frame: &mut Frame<impl Backend>, rect: Rect) {
+    pub fn render(&self, frame: &mut Frame, rect: Rect) {
         let bandwidth = self.bandwidth_string();
         let color = if self.paused {
             Color::Yellow
@@ -63,13 +62,7 @@ impl<'a> HeaderDetails<'a> {
         self.render_bandwidth(frame, rect, &bandwidth, color);
     }
 
-    fn render_bandwidth(
-        &self,
-        frame: &mut Frame<impl Backend>,
-        rect: Rect,
-        bandwidth: &str,
-        color: Color,
-    ) {
+    fn render_bandwidth(&self, frame: &mut Frame, rect: Rect, bandwidth: &str, color: Color) {
         let bandwidth_text = Span::styled(
             bandwidth,
             Style::default().fg(color).add_modifier(Modifier::BOLD),
@@ -80,28 +73,26 @@ impl<'a> HeaderDetails<'a> {
     }
 
     fn bandwidth_string(&self) -> String {
+        let intrf = self.state.interface_name.as_deref().unwrap_or("all");
         let t = if self.state.cumulative_mode {
             "Data"
         } else {
             "Rate"
         };
+        let unit_family = self.state.unit_family;
         let up = DisplayBandwidth {
             bandwidth: self.state.total_bytes_uploaded as f64,
+            unit_family,
         };
         let down = DisplayBandwidth {
             bandwidth: self.state.total_bytes_downloaded as f64,
+            unit_family,
         };
         let paused = if self.paused { " [PAUSED]" } else { "" };
-        format!(" Total {t} (Up / Down): {up} / {down}{paused}")
+        format!("IF: {intrf} | Total {t} (Up / Down): {up} / {down}{paused}")
     }
 
-    fn render_elapsed_time(
-        &self,
-        frame: &mut Frame<impl Backend>,
-        rect: Rect,
-        elapsed_time: &str,
-        color: Color,
-    ) {
+    fn render_elapsed_time(&self, frame: &mut Frame, rect: Rect, elapsed_time: &str, color: Color) {
         let elapsed_time_text = Span::styled(
             elapsed_time,
             Style::default().fg(color).add_modifier(Modifier::BOLD),
