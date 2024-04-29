@@ -1,11 +1,11 @@
 Name:           bandwhich
-Version:        0.21.0
-Release:        1%{?dist}
+Version:        0.22.2
+Release:        2%{?dist}
 Summary:        Terminal bandwidth utilization tool
 
 License:        MIT
 URL:            https://github.com/imsnif/bandwhich
-Source0:        %{name}-%{version}.tar.gz
+Source0:        https://github.com/imsnif/bandwhich/archive/refs/tags/v%{version}.tar.gz
 
 %description
 Terminal bandwidth utilization tool
