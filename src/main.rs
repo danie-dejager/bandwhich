@@ -28,29 +28,14 @@ use network::{
     dns::{self, IpTable},
     LocalSocket, Sniffer, Utilization,
 };
-use once_cell::sync::Lazy;
 use pnet::datalink::{DataLinkReceiver, NetworkInterface};
 use ratatui::backend::{Backend, CrosstermBackend};
 use simplelog::WriteLogger;
 
 use crate::cli::Opt;
+use crate::os::ProcessInfo;
 
 const DISPLAY_DELTA: Duration = Duration::from_millis(1000);
-
-/// Lock guard to prevent races during logging.
-static LOG_LOCK: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
-
-/// Thread-safe log macro with a global Mutex guard.
-#[macro_export]
-macro_rules! mt_log {
-    ($log_macro: ident, $($fmt_args:expr),*) => {{
-        let guard = $crate::LOG_LOCK
-            .lock()
-            .unwrap_or_else(|poisoned| poisoned.into_inner());
-        log::$log_macro!($($fmt_args,)*);
-        drop(guard);
-    }};
-}
 
 fn main() -> anyhow::Result<()> {
     let opts = Opt::parse();
@@ -89,7 +74,7 @@ fn main() -> anyhow::Result<()> {
 }
 
 pub struct OpenSockets {
-    sockets_to_procs: HashMap<LocalSocket, String>,
+    sockets_to_procs: HashMap<LocalSocket, ProcessInfo>,
 }
 
 pub struct OsInputOutput {

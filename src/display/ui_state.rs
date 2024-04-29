@@ -2,14 +2,15 @@ use std::{
     cmp,
     collections::{HashMap, HashSet, VecDeque},
     hash::Hash,
-    iter::FromIterator,
     net::{IpAddr, Ipv4Addr, Ipv6Addr},
 };
 
+use log::warn;
+
 use crate::{
     display::BandwidthUnitFamily,
-    mt_log,
     network::{Connection, LocalSocket, Utilization},
+    os::ProcessInfo,
 };
 
 static RECALL_LENGTH: usize = 5;
@@ -73,7 +74,7 @@ impl Bandwidth for ConnectionData {
 }
 
 pub struct UtilizationData {
-    connections_to_procs: HashMap<LocalSocket, String>,
+    connections_to_procs: HashMap<LocalSocket, ProcessInfo>,
     network_utilization: Utilization,
 }
 
@@ -81,7 +82,7 @@ pub struct UtilizationData {
 pub struct UIState {
     /// The interface name in single-interface mode. `None` means all interfaces.
     pub interface_name: Option<String>,
-    pub processes: Vec<(String, NetworkData)>,
+    pub processes: Vec<(ProcessInfo, NetworkData)>,
     pub remote_addresses: Vec<(IpAddr, NetworkData)>,
     pub connections: Vec<(Connection, ConnectionData)>,
     pub total_bytes_downloaded: u128,
@@ -89,7 +90,7 @@ pub struct UIState {
     pub cumulative_mode: bool,
     pub unit_family: BandwidthUnitFamily,
     pub utilization_data: VecDeque<UtilizationData>,
-    pub processes_map: HashMap<String, NetworkData>,
+    pub processes_map: HashMap<ProcessInfo, NetworkData>,
     pub remote_addresses_map: HashMap<IpAddr, NetworkData>,
     pub connections_map: HashMap<Connection, ConnectionData>,
     /// Used for reducing logging noise.
@@ -99,7 +100,7 @@ pub struct UIState {
 impl UIState {
     pub fn update(
         &mut self,
-        connections_to_procs: HashMap<LocalSocket, String>,
+        connections_to_procs: HashMap<LocalSocket, ProcessInfo>,
         network_utilization: Utilization,
     ) {
         self.utilization_data.push_back(UtilizationData {
@@ -109,7 +110,7 @@ impl UIState {
         if self.utilization_data.len() > RECALL_LENGTH {
             self.utilization_data.pop_front();
         }
-        let mut processes: HashMap<String, NetworkData> = HashMap::new();
+        let mut processes: HashMap<ProcessInfo, NetworkData> = HashMap::new();
         let mut remote_addresses: HashMap<IpAddr, NetworkData> = HashMap::new();
         let mut connections: HashMap<Connection, ConnectionData> = HashMap::new();
         let mut total_bytes_downloaded: u128 = 0;
@@ -128,7 +129,9 @@ impl UIState {
                     .or_default();
                 connection_data.total_bytes_downloaded += connection_info.total_bytes_downloaded;
                 connection_data.total_bytes_uploaded += connection_info.total_bytes_uploaded;
-                connection_data.interface_name = connection_info.interface_name.clone();
+                connection_data
+                    .interface_name
+                    .clone_from(&connection_info.interface_name);
                 data_for_remote_address.total_bytes_downloaded +=
                     connection_info.total_bytes_downloaded;
                 data_for_remote_address.total_bytes_uploaded +=
@@ -141,11 +144,10 @@ impl UIState {
 
                 let data_for_process = {
                     let local_socket = connection.local_socket;
-                    let process_name = get_proc_name(connections_to_procs, &local_socket);
+                    let proc_info = get_proc_info(connections_to_procs, &local_socket);
 
                     // only log each orphan connection once
-                    if process_name.is_none() && !self.known_orphan_sockets.contains(&local_socket)
-                    {
+                    if proc_info.is_none() && !self.known_orphan_sockets.contains(&local_socket) {
                         // newer connections go in the front so that searches are faster
                         // basically recency bias
                         self.known_orphan_sockets.push_front(local_socket);
@@ -156,29 +158,31 @@ impl UIState {
                             .find(|(&LocalSocket { port, protocol, .. }, _)| {
                                 port == local_socket.port && protocol == local_socket.protocol
                             })
-                            .and_then(|(local_conn_lookalike, name)| {
+                            .and_then(|(local_conn_lookalike, info)| {
                                 network_utilization
                                     .connections
                                     .keys()
                                     .find(|conn| &conn.local_socket == local_conn_lookalike)
-                                    .map(|conn| (conn, name))
+                                    .map(|conn| (conn, info))
                             }) {
-                            Some((lookalike, name)) => {
-                                mt_log!(
-                                    warn,
-                                    r#""{name}" owns a similar looking connection, but its local ip doesn't match."#
+                            Some((lookalike, proc_info)) => {
+                                warn!(
+                                    r#""{0}" owns a similar looking connection, but its local ip doesn't match."#,
+                                    proc_info.name
                                 );
-                                mt_log!(warn, "Looking for: {connection:?}; found: {lookalike:?}");
+                                warn!("Looking for: {connection:?}; found: {lookalike:?}");
                             }
                             None => {
-                                mt_log!(warn, "Cannot determine which process owns {connection:?}");
+                                warn!("Cannot determine which process owns {connection:?}");
                             }
                         };
                     }
 
-                    let process_display_name = process_name.unwrap_or("<UNKNOWN>").to_owned();
-                    connection_data.process_name = process_display_name.clone();
-                    processes.entry(process_display_name).or_default()
+                    let proc_info = proc_info
+                        .cloned()
+                        .unwrap_or_else(|| ProcessInfo::new("<UNKNOWN>", 0));
+                    connection_data.process_name.clone_from(&proc_info.name);
+                    processes.entry(proc_info).or_default()
                 };
 
                 data_for_process.total_bytes_downloaded += connection_info.total_bytes_downloaded;
@@ -222,10 +226,10 @@ impl UIState {
     }
 }
 
-fn get_proc_name<'a>(
-    connections_to_procs: &'a HashMap<LocalSocket, String>,
+fn get_proc_info<'a>(
+    connections_to_procs: &'a HashMap<LocalSocket, ProcessInfo>,
     local_socket: &LocalSocket,
-) -> Option<&'a str> {
+) -> Option<&'a ProcessInfo> {
     connections_to_procs
         // direct match
         .get(local_socket)
@@ -253,7 +257,6 @@ fn get_proc_name<'a>(
                 ..*local_socket
             })
         })
-        .map(String::as_str)
 }
 
 fn merge_bandwidth<K, V>(self_map: &mut HashMap<K, V>, other_map: HashMap<K, V>)

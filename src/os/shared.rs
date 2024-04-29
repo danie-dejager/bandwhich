@@ -7,17 +7,33 @@ use std::{
 use anyhow::{anyhow, bail};
 use crossterm::event::{read, Event};
 use itertools::Itertools;
+use log::{debug, warn};
 use pnet::datalink::{self, Channel::Ethernet, Config, DataLinkReceiver, NetworkInterface};
 use tokio::runtime::Runtime;
 
-use crate::{mt_log, network::dns, os::errors::GetInterfaceError, OsInputOutput};
+use crate::{network::dns, os::errors::GetInterfaceError, OsInputOutput};
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "android", target_os = "linux"))]
 use crate::os::linux::get_open_sockets;
 #[cfg(any(target_os = "macos", target_os = "freebsd"))]
 use crate::os::lsof::get_open_sockets;
 #[cfg(target_os = "windows")]
 use crate::os::windows::get_open_sockets;
+
+#[derive(Clone, Debug, Default, Hash, PartialEq, Eq)]
+pub struct ProcessInfo {
+    pub name: String,
+    pub pid: u32,
+}
+
+impl ProcessInfo {
+    pub fn new(name: &str, pid: u32) -> Self {
+        Self {
+            name: name.to_string(),
+            pid,
+        }
+    }
+}
 
 pub struct TerminalEvents;
 
@@ -97,7 +113,7 @@ pub fn get_input(
                 interface.is_up() && !interface.ips.is_empty()
             };
             if !keep {
-                mt_log!(debug, "{} is down. Skipping it.", interface.name);
+                debug!("{} is down. Skipping it.", interface.name);
             }
             keep
         })
@@ -122,8 +138,7 @@ pub fn get_input(
         .iter()
         .filter_map(|(interface, frames_res)| frames_res.as_ref().err().map(|err| (interface, err)))
         .for_each(|(interface, err)| {
-            mt_log!(
-                warn,
+            warn!(
                 "Failed to acquire a frame receiver for {}: {err}",
                 interface.name
             )
@@ -205,7 +220,7 @@ fn eperm_message() -> &'static str {
 }
 
 #[inline]
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "android", target_os = "linux"))]
 fn eperm_message() -> &'static str {
     r#"
     Insufficient permissions to listen on network interface(s). You can work around

@@ -6,11 +6,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+## Fixed
+
+* Remove redundant imports #377 - @cyqsimon
+* CI: use GitHub API to exempt dependabot from changelog requirement #378 - @cyqsimon
+* Remove unnecessary logging synchronisation #381 - @cyqsimon
+* Apply suggestions from new clippy lint clippy::assigning_clones #382 - @cyqsimon
+* Fix IPv6 socket detect logic #383 - @cyqsimon
+* Support build for `target_os` `android` #384 - @flxo
+* Fix Windows FP discrepancy issue in test #400 - @cyqsimon
+
 ## Added
+
 * CI: include generated assets in release archive #359 - @cyqsimon
+* Add PID column to the process table #379 - @notjedi
+* CI: add builds for target `aarch64-linux-android` #384 - @flxo
+* CI: Keep GitHub Actions up to date with GitHub's Dependabot #403 - @cclauss
+* CI: Enable more cross-compiled builds #401 - @cyqsimon
+* CI: use sccache to speed up CI #408 - @cyqsimon
 
 ## Changed
+
 * CI: strip release binaries for all targets #358 - @cyqsimon
+* Bump MSRV to 1.74 (required by clap 4.5; see #373)
+* CI: Configure dependabot grouping #395 - @cyqsimon
+* CI refactor #399 - @cyqsimon
+* CI: Temporarily disable UI tests #406 - @cyqsimon
+* Update README #407 - @cyqsimon
+* Update usage in README #409 - @cyqsimon
+
+## Removed
+
+* CI: Remove musl-tools install step #402 - @cyqsimon
 
 ## [0.22.2] - 2024-01-28
 
