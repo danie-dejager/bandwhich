@@ -1,6 +1,6 @@
 Name:           bandwhich
 Version:        0.22.2
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Terminal bandwidth utilization tool
 
 License:        MIT
@@ -16,7 +16,11 @@ Terminal bandwidth utilization tool
 %setup -q
 
 %build
-cargo build --release 
+# Install Rust using curl
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+export PATH="$PATH:$HOME/.cargo/bin"
+cargo build --release
+strip --strip-all target/release/%{name}
 
 %install
 mkdir -p %{buildroot}/%{_bindir}
