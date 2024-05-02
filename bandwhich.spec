@@ -7,6 +7,12 @@ License:        MIT
 URL:            https://github.com/imsnif/bandwhich
 Source0:        https://github.com/imsnif/bandwhich/archive/refs/tags/v%{version}.tar.gz
 
+BuildRequires: curl
+BuildRequires: gcc
+BuildRequires: make
+BuildRequires: gzip
+BuildRequires: upx
+
 %description
 Terminal bandwidth utilization tool
 
