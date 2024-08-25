@@ -1,6 +1,6 @@
 Name:           bandwhich
-Version:        0.22.2
-Release:        3%{?dist}
+Version:        0.23.0
+Release:        1%{?dist}
 Summary:        Terminal bandwidth utilization tool
 
 License:        MIT
