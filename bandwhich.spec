@@ -1,5 +1,5 @@
 Name:           bandwhich
-Version:        0.23.0
+Version:        0.23.1
 Release:        1%{?dist}
 Summary:        Terminal bandwidth utilization tool
 
