@@ -3,9 +3,9 @@ use std::time::{Duration, Instant};
 use ratatui::{
     layout::{Alignment, Rect},
     style::{Color, Modifier, Style},
-    terminal::Frame,
     text::Span,
     widgets::Paragraph,
+    Frame,
 };
 use unicode_width::UnicodeWidthStr;
 
@@ -40,7 +40,7 @@ pub struct HeaderDetails<'a> {
     pub paused: bool,
 }
 
-impl<'a> HeaderDetails<'a> {
+impl HeaderDetails<'_> {
     pub fn render(&self, frame: &mut Frame, rect: Rect) {
         let bandwidth = self.bandwidth_string();
         let color = if self.paused {

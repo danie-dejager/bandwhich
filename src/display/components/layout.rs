@@ -1,6 +1,6 @@
 use ratatui::{
     layout::{Constraint, Direction, Rect},
-    terminal::Frame,
+    Frame,
 };
 
 use crate::display::{HeaderDetails, HelpText, Table};
@@ -30,7 +30,7 @@ pub struct Layout<'a> {
     pub footer: HelpText,
 }
 
-impl<'a> Layout<'a> {
+impl Layout<'_> {
     fn progressive_split(&self, rect: Rect, splits: Vec<Direction>) -> Vec<Rect> {
         splits
             .into_iter()
