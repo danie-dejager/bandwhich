@@ -8,6 +8,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ### Fixed
 
+* Update CONTRIBUTING information #438 - @YJDoc2 @cyqsimon
+
+### Changed
+
+* Bump msrv to 1.75.0 #439 - @YJDoc2
+* Replace `derivative` with `derive_more` #439 - @YJDoc2
+* Add build optimizations for release binary #434 - @pando85
+* Minor cleanup and optimisations #435 - @cyqsimon
+
+## [0.23.1] - 2024-10-09
+
+### Fixed
+
 * CI: Use Powershell Compress-Archive to create Windows binary zip #424 - @cyqsimon
 * Exit gracefully when there is a broken pipe error #429 - @sigmaSd
 * Fix breaking changes of sysinfo crate #431 - @cyqsimon
@@ -15,7 +28,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [0.23.0] - 2024-08-17
 
-## Fixed
+### Fixed
 
 * Remove redundant imports #377 - @cyqsimon
 * CI: use GitHub API to exempt dependabot from changelog requirement #378 - @cyqsimon
@@ -25,7 +38,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 * Support build for `target_os` `android` #384 - @flxo
 * Fix Windows FP discrepancy issue in test #400 - @cyqsimon
 
-## Added
+### Added
 
 * CI: include generated assets in release archive #359 - @cyqsimon
 * Add PID column to the process table #379 - @notjedi
@@ -34,7 +47,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 * CI: Enable more cross-compiled builds #401 - @cyqsimon
 * CI: use sccache to speed up CI #408 - @cyqsimon
 
-## Changed
+### Changed
 
 * CI: strip release binaries for all targets #358 - @cyqsimon
 * Bump MSRV to 1.74 (required by clap 4.5; see #373)
@@ -44,19 +57,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 * Update README #407 - @cyqsimon
 * Update usage in README #409 - @cyqsimon
 
-## Removed
+### Removed
 
 * CI: Remove musl-tools install step #402 - @cyqsimon
 
 ## [0.22.2] - 2024-01-28
 
-## Added
+### Added
 
 * Generate completion & manpage #357 - @cyqsimon
 
 ## [0.22.1] - 2024-01-28
 
-## Fixed
+### Fixed
 
 * Hot fix a Windows compile issue #356 - @cyqsimon
 
@@ -74,7 +87,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 * Table formatting logic overhaul #305 - @cyqsimon
 * Refactor OsInputOutput (combine interfaces & frames into single Vec) #310 - @cyqsimon
 
-## Removed
+### Removed
 
 * Reorganise & cleanup packaging code/resources #329 - @cyqsimon
 
