@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 * Update CONTRIBUTING information #438 - @YJDoc2 @cyqsimon
 * Fix new clippy lint #457 - @cyqsimon
+* Apply new clippy lints #468 - @cyqsimon
 
 ### Changed
 
@@ -20,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 * Bump `pnet` & `packet-builder` #444 - @cyqsimon
 * Switch from anyhow to eyre #450 - @cyqsimon
 * Manually bump all dependencies #456 - @cyqsimon
+* Bump MSRV to 1.82.0 - @cyqsimon
 
 ## [0.23.1] - 2024-10-09
 

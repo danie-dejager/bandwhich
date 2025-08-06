@@ -23,8 +23,7 @@ use crate::{
 };
 
 pub fn sleep_and_quit_events(sleep_num: usize) -> Box<TerminalEvents> {
-    let events = iter::repeat(None)
-        .take(sleep_num)
+    let events = iter::repeat_n(None, sleep_num)
         .chain([Some(Event::Key(KeyEvent::new(
             KeyCode::Char('c'),
             KeyModifiers::CONTROL,
@@ -34,8 +33,7 @@ pub fn sleep_and_quit_events(sleep_num: usize) -> Box<TerminalEvents> {
 }
 
 pub fn sleep_resize_and_quit_events(sleep_num: usize) -> Box<TerminalEvents> {
-    let events = iter::repeat(None)
-        .take(sleep_num)
+    let events = iter::repeat_n(None, sleep_num)
         .chain([
             Some(Event::Resize(100, 100)),
             Some(Event::Key(KeyEvent::new(
@@ -261,7 +259,7 @@ pub fn os_input_output_factory(
         Some(stdout) => Box::new({
             move |output| {
                 let mut stdout = stdout.lock().unwrap();
-                writeln!(&mut stdout, "{}", output).unwrap();
+                writeln!(&mut stdout, "{output}").unwrap();
             }
         }),
         None => Box::new(|_output| {}),
