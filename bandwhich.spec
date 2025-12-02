@@ -17,7 +17,7 @@ BuildRequires: upx
 Terminal bandwidth utilization tool
 
 %global debug_package %{nil}
-
+%undefine _package_note_file
 %prep
 %setup -q
 
